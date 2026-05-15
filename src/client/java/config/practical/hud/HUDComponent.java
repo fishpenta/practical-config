@@ -24,6 +24,8 @@ public class HUDComponent implements HudElement {
     private static final int HIGHLIGHT_COLOR = 0x99ffffff;
     private static final int HIGHLIGHT_MARGIN = 2;
 
+    private static final Identifier AFTER_IDENTIFIER = Identifier.of("boss_bar");
+
     private static final MinecraftClient client = MinecraftClient.getInstance();
 
     private transient final double defaultX, defaultY;
@@ -68,7 +70,8 @@ public class HUDComponent implements HudElement {
         this.renderSupplier = renderSupplier;
         this.editSupplier = editSupplier;
 
-        HudElementRegistry.addLast(Identifier.of(Practicalconfig.MOD_ID, "component-" + componentCount), this);
+        //HudElementRegistry.addLast(Identifier.of(Practicalconfig.MOD_ID, "component-" + componentCount), this);
+        HudElementRegistry.attachElementAfter(AFTER_IDENTIFIER, Identifier.of(Practicalconfig.MOD_ID, "component-" + componentCount), this);
         componentCount++;
         ComponentEditScreen.addComponent(this);
     }

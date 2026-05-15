@@ -94,11 +94,11 @@ class TestFile {
         int x = component.getScaledX();
         int y = component.getScaledY();
 
-        Text text = Text.literal("I");
+        Text text = Text.literal("This is a string");
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
         int centered = (component.getWidth() - textRenderer.getWidth(text)) / 2;
-        context.fill(x, y, x + component.getWidth(), y + component.getHeight(), someColor);
+        //context.fill(x, y, x + component.getWidth(), y + component.getHeight(), someColor);
         context.drawText(textRenderer, text, x + centered, y + (component.getHeight() - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
     });
 
