@@ -3,15 +3,15 @@ package config.practical.widgets.color;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigChild;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 class HueSlider extends ConfigChild {
 
-    private static final Identifier HUE_SLIDER = Identifier.of(Constants.NAMESPACE, "hue-sprite");
+    private static final Identifier HUE_SLIDER = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "hue-sprite");
     private static final int THUMB_DIAMETER = Constants.CORNER_RADIUS * 2;
 
     private final ConfigColor parent;
@@ -24,7 +24,7 @@ class HueSlider extends ConfigChild {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         if (!parent.displayColorSelector()) return;
 
         int x = getX();
@@ -32,25 +32,20 @@ class HueSlider extends ConfigChild {
         int width = getWidth();
         int height = getHeight();
 
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, HUE_SLIDER, x, y, width, height);
-        DrawHelper.drawBackground(context, x + thumbPosition, y, THUMB_DIAMETER, THUMB_DIAMETER);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, HUE_SLIDER, x, y, width, height);
+        DrawHelper.drawBackground(graphics, x + thumbPosition, y, THUMB_DIAMETER, THUMB_DIAMETER);
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-
+    protected void onDrag(MouseButtonEvent event, double offsetX, double offsetY) {
+        super.onDrag(event, offsetX, offsetY);
+        setThumbPosition(event.x());
     }
 
     @Override
-    protected void onDrag(Click click, double offsetX, double offsetY) {
-        super.onDrag(click, offsetX, offsetY);
-        setThumbPosition(click.x());
-    }
-
-    @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        setThumbPosition(click.x());
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        setThumbPosition(event.x());
     }
 
     public void setHueValue(float hue) {
@@ -72,5 +67,10 @@ class HueSlider extends ConfigChild {
     protected void updatePosition(int x, int y) {
         this.setX(x + ConfigColor.WIDTH + ConfigColor.CHILD_OFFSET);
         this.setY(y + SBSelector.SIZE + ConfigColor.SLIDER_HEIGHT);
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+
     }
 }

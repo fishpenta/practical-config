@@ -1,16 +1,16 @@
 package config.practical.hud;
 
+import com.mojang.blaze3d.platform.Window;
 import config.practical.Config;
 import config.practical.utilities.Constants;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.util.Window;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2fStack;
 import org.lwjgl.glfw.GLFW;
 
@@ -18,9 +18,9 @@ import java.util.ArrayList;
 
 public class ComponentEditScreen extends Screen {
 
-    private static final Identifier CROSSHAIR = Identifier.of(Constants.NAMESPACE, "crosshair");
+    private static final Identifier CROSSHAIR = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "crosshair");
 
-    private static final Text TITLE = Text.literal("");
+    private static final Component TITLE = Component.literal("");
 
     private static final double MOVE_SPEED = 2;
     private static final int CROSSHAIR_SIZE = 4;
@@ -87,9 +87,9 @@ public class ComponentEditScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(Click click, boolean doubled) {
-        int x = (int) click.x();
-        int y = (int) click.y();
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
+        int x = (int) event.x();
+        int y = (int) event.y();
 
         selected = null;
         for (HUDComponent component : components) {
@@ -100,31 +100,30 @@ public class ComponentEditScreen extends Screen {
                 break;
             }
         }
-        return super.mouseClicked(click, doubled);
+        return super.mouseClicked(event, doubled);
     }
 
     @Override
-    public boolean mouseDragged(Click click, double offsetX, double offsetY) {
+    public boolean mouseDragged(MouseButtonEvent event, double offsetX, double offsetY) {
 
         if (isDragging && selected != null) {
-            assert client != null;
-            Window window = client.getWindow();
-            selected.move(offsetX / window.getScaledWidth(), offsetY / window.getScaledHeight());
+            Window window = minecraft.getWindow();
+            selected.move(offsetX / window.getGuiScaledWidth(), offsetY / window.getGuiScaledHeight());
         }
 
-        return super.mouseDragged(click, offsetX, offsetY);
+        return super.mouseDragged(event, offsetX, offsetY);
     }
 
     @Override
-    public boolean mouseReleased(Click click) {
+    public boolean mouseReleased(MouseButtonEvent event) {
         isDragging = false;
-        return super.mouseReleased(click);
+        return super.mouseReleased(event);
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        int modifiers = input.modifiers();
-        int keyCode = input.key();
+    public boolean keyPressed(KeyEvent event) {
+        int modifiers = event.modifiers();
+        int keyCode = event.key();
 
         boolean ctrlIsPressed = (modifiers & GLFW.GLFW_MOD_CONTROL) != 0;
         boolean shiftIsPressed = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
@@ -154,100 +153,98 @@ public class ComponentEditScreen extends Screen {
                 selected.reset();
             }
 
-            assert client != null;
             if (keyCode == GLFW.GLFW_KEY_H && ctrlIsPressed) {
-                selected.centerHorizontally(client.getWindow());
+                selected.centerHorizontally(minecraft.getWindow());
             }
 
             if (keyCode == GLFW.GLFW_KEY_V && ctrlIsPressed) {
-                selected.centerVertically(client.getWindow());
+                selected.centerVertically(minecraft.getWindow());
             }
 
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
-                selected.move(-MOVE_SPEED / client.getWindow().getScaledWidth(), 0);
+                selected.move(-MOVE_SPEED / minecraft.getWindow().getGuiScaledWidth(), 0);
             }
 
             if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-                selected.move(MOVE_SPEED / client.getWindow().getScaledWidth(), 0);
+                selected.move(MOVE_SPEED / minecraft.getWindow().getGuiScaledWidth(), 0);
             }
 
             if (keyCode == GLFW.GLFW_KEY_UP) {
-                selected.move(0, -MOVE_SPEED / client.getWindow().getScaledHeight());
+                selected.move(0, -MOVE_SPEED / minecraft.getWindow().getGuiScaledHeight());
             }
 
             if (keyCode == GLFW.GLFW_KEY_DOWN) {
-                selected.move(0, MOVE_SPEED / client.getWindow().getScaledHeight());
+                selected.move(0, MOVE_SPEED / minecraft.getWindow().getGuiScaledHeight());
             }
 
             if (keyCode == GLFW.GLFW_KEY_S) {
-                selected.snapToGrid(client.getWindow());
+                selected.snapToGrid(minecraft.getWindow());
 
             }
         }
-        return super.keyPressed(input);
+        return super.keyPressed(event);
 
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        super.render(context, mouseX, mouseY, deltaTicks);
-        int width = context.getScaledWindowWidth();
-        int height = context.getScaledWindowHeight();
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        super.render(graphics, mouseX, mouseY, deltaTicks);
+        int width = graphics.guiWidth();
+        int height = graphics.guiHeight();
 
-        TextRenderer renderer = this.textRenderer;
+        Font font = this.font;
 
         if (Config.gridEnabled) {
 
-            Matrix3x2fStack stack = context.getMatrices();
+            Matrix3x2fStack stack = graphics.pose();
             stack.pushMatrix();
             stack.translate(-0.5f, -0.5f);
             for (int i = width / 2; i >= 0; i -= Constants.GRID_SIZE) {
-                context.drawVerticalLine(i, 0, height, gridColor);
+                graphics.vLine(i, 0, height, gridColor);
             }
 
             for (int i = height / 2; i >= 0; i -= Constants.GRID_SIZE) {
-                context.drawHorizontalLine(0, width, i, gridColor);
+                graphics.hLine(0, width, i, gridColor);
             }
 
             for (int i = width / 2; i < width; i += Constants.GRID_SIZE) {
-                context.drawVerticalLine(i, 0, height, gridColor);
+                graphics.vLine(i, 0, height, gridColor);
             }
 
             for (int i = height / 2; i < height; i += Constants.GRID_SIZE) {
-                context.drawHorizontalLine(0, width, i, gridColor);
+                graphics.hLine(0, width, i, gridColor);
             }
 
             stack.popMatrix();
         }
 
 
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, CROSSHAIR, width / 2 - CROSSHAIR_SIZE, height / 2 - CROSSHAIR_SIZE, CROSSHAIR_SIZE * 2, CROSSHAIR_SIZE * 2, Constants.WHITE_COLOR);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, CROSSHAIR, width / 2 - CROSSHAIR_SIZE, height / 2 - CROSSHAIR_SIZE, CROSSHAIR_SIZE * 2, CROSSHAIR_SIZE * 2, Constants.WHITE_COLOR);
 
         int longest = 0;
         for (String str : INFO) {
-            longest = Math.max(textRenderer.getWidth(str), longest);
+            longest = Math.max(font.width(str), longest);
         }
 
         for (int i = 0; i < INFO.length; i++) {
-            context.drawText(textRenderer, INFO[i], 1, height - ((renderer.fontHeight + 1) * (INFO.length - i)), 0xffffffff, true);
+            graphics.drawString(font, INFO[i], 1, height - ((font.lineHeight + 1) * (INFO.length - i)), 0xffffffff, true);
         }
 
         for (int i = 0; i < KEYS.length; i++) {
-            context.drawText(textRenderer, KEYS[i], 7 + longest, height - ((renderer.fontHeight + 1) * (KEYS.length - i)), 0xffffffff, true);
+            graphics.drawString(font, KEYS[i], 7 + longest, height - ((font.lineHeight + 1) * (KEYS.length - i)), 0xffffffff, true);
         }
 
         if (selected != null) {
-            selected.renderHighlight(context);
+            selected.renderHighlight(graphics);
         }
 
         for (HUDComponent component : components) {
-            component.renderIgnoreConditions(context);
+            component.renderIgnoreConditions(graphics);
         }
     }
 
     @Override
-    public void close() {
-        assert this.client != null;
-        this.client.setScreen(parent);
+    public void onClose() {
+        this.minecraft.setScreen(parent);
     }
 }

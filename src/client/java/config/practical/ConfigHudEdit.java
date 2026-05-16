@@ -2,19 +2,19 @@ package config.practical;
 
 import config.practical.hud.ComponentEditScreen;
 import config.practical.utilities.DrawHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
-class ConfigHudEdit extends ClickableWidget {
+class ConfigHudEdit extends AbstractWidget {
 
-    private static final Text TEXT = Text.literal("Modify GUI");
+    private static final Component TEXT = Component.literal("Modify GUI");
 
     public static final int WIDTH = 150;
     public static final int HEIGHT = 20;
@@ -33,30 +33,30 @@ class ConfigHudEdit extends ClickableWidget {
     }
 
     @Override
-    protected void renderWidget(@NotNull DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         int x = getX();
         int y = getY();
-        MinecraftClient client = MinecraftClient.getInstance();
-        TextRenderer textRenderer = client.textRenderer;
+        Minecraft client = Minecraft.getInstance();
+        Font font = client.font;
 
-        Text message = getMessage();
+        Component message = getMessage();
 
-        context.fill(x, y, x + WIDTH, y + HEIGHT, BACKGROUND_COLOR);
-        DrawHelper.drawBorder(context, x, y, WIDTH, HEIGHT, this.isFocused() ? WHITE_COLOR : BLACK_COLOR);
+        graphics.fill(x, y, x + WIDTH, y + HEIGHT, BACKGROUND_COLOR);
+        DrawHelper.drawBorder(graphics, x, y, WIDTH, HEIGHT, this.isFocused() ? WHITE_COLOR : BLACK_COLOR);
 
-        int textWidth = textRenderer.getWidth(message);
+        int textWidth = font.width(message);
 
-        context.drawText(textRenderer, message, x + (WIDTH - textWidth) / 2, y + TEXT_Y_OFFSET, WHITE_COLOR, true);
+        graphics.drawString(font, message, x + (WIDTH - textWidth) / 2, y + TEXT_Y_OFFSET, WHITE_COLOR, true);
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        MinecraftClient.getInstance().setScreen(new ComponentEditScreen(screen));
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        Minecraft.getInstance().setScreen(new ComponentEditScreen(screen));
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 }

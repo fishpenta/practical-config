@@ -1,8 +1,8 @@
 package config.practical.widgets.sliders;
 
 import config.practical.utilities.Constants;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -21,7 +21,7 @@ public class ConfigFloat extends Slider {
      * @param min      the min value
      * @param max      the max value
      */
-    public ConfigFloat(Text message, Supplier<Float> supplier, Consumer<Float> consumer, float step, float min, float max) {
+    public ConfigFloat(Component message, Supplier<Float> supplier, Consumer<Float> consumer, float step, float min, float max) {
         super(message);
         this.supplier = supplier;
         this.consumer = consumer;
@@ -49,7 +49,7 @@ public class ConfigFloat extends Slider {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
+    public boolean keyPressed(KeyEvent input) {
         int keyCode = input.key();
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
             consumer.accept(Math.max(supplier.get() - step, min));

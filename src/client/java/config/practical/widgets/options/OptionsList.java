@@ -3,11 +3,10 @@ package config.practical.widgets.options;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigChild;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
 
 import java.util.function.Consumer;
 
@@ -28,20 +27,20 @@ class OptionsList <T> extends ConfigChild {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
 
         if (!parent.displayList()) return;
 
         int x = getX();
         int y = getY();
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
 
-        DrawHelper.drawBackground(context, x, y, width, ELEMENT_HEIGHT* options.length);
+        DrawHelper.drawBackground(graphics, x, y, width, ELEMENT_HEIGHT* options.length);
 
         for (int i = 0; i < options.length; i++) {
             T option = options[i];
-            context.drawText(textRenderer, option.toString(),x + Constants.TEXT_PADDING, y + ELEMENT_HEIGHT * i + ((ELEMENT_HEIGHT - Constants.TEXT_HEIGHT) / 2), 0xffffffff, true);
+            graphics.drawString(font, option.toString(),x + Constants.TEXT_PADDING, y + ELEMENT_HEIGHT * i + ((ELEMENT_HEIGHT - Constants.TEXT_HEIGHT) / 2), 0xffffffff, true);
         }
 
     }
@@ -58,14 +57,9 @@ class OptionsList <T> extends ConfigChild {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-
-    }
-
-    @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        int index =(int) (click.y() - getY()) / ELEMENT_HEIGHT;
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        int index =(int) (event.y() - getY()) / ELEMENT_HEIGHT;
         if (index < 0 || index >= options.length) return;
         consumer.accept(options[index]);
         parent.hideList();

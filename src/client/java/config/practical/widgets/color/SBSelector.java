@@ -1,22 +1,21 @@
 package config.practical.widgets.color;
 
+import com.mojang.blaze3d.platform.NativeImage;
 import config.practical.utilities.Constants;
 import config.practical.widgets.abstracts.ConfigChild;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.texture.TextureManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.resources.Identifier;
 
-import java.awt.Color;
+import java.awt.*;
 
 class SBSelector extends ConfigChild {
 
-    private static final Identifier EMPTY_SB_MASK = Identifier.of(Constants.NAMESPACE, "empty-sb-mask");
+    private static final Identifier EMPTY_SB_MASK = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "empty-sb-mask");
     public static final int SIZE = ConfigColor.CHILD_WIDTH;
     public static final int SPRITE_SIZE = SIZE - Constants.LINE_THICKNESS * 2;
 
@@ -27,12 +26,12 @@ class SBSelector extends ConfigChild {
         super(parent, SIZE, SIZE);
         this.parent = parent;
 
-        sbMask = Identifier.of(Constants.NAMESPACE, identifier);
+        sbMask = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, identifier);
         makeSBMask(hue);
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         if (!parent.displayColorSelector()) return;
 
         int x = getX();
@@ -40,13 +39,8 @@ class SBSelector extends ConfigChild {
         int width = getWidth();
         int height = getHeight();
 
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, sbMask, x + Constants.LINE_THICKNESS, y + Constants.LINE_THICKNESS, 0, 0, SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, Constants.WHITE_COLOR);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, EMPTY_SB_MASK, x, y, width, height);
-    }
-
-    @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-
+        graphics.blit(RenderPipelines.GUI_TEXTURED, sbMask, x + Constants.LINE_THICKNESS, y + Constants.LINE_THICKNESS, 0, 0, SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, Constants.WHITE_COLOR);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, EMPTY_SB_MASK, x, y, width, height);
     }
 
     @Override
@@ -61,11 +55,11 @@ class SBSelector extends ConfigChild {
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
 
-        float saturation = Math.clamp((float) (click.x() - getX() - Constants.LINE_THICKNESS) / (float) SPRITE_SIZE, 0f, 1f);
-        float brightness = 1 - Math.clamp((float) (click.y() - getY() - Constants.LINE_THICKNESS) / (float) SPRITE_SIZE, 0f, 1f);
+        float saturation = Math.clamp((float) (event.x() - getX() - Constants.LINE_THICKNESS) / (float) SPRITE_SIZE, 0f, 1f);
+        float brightness = 1 - Math.clamp((float) (event.y() - getY() - Constants.LINE_THICKNESS) / (float) SPRITE_SIZE, 0f, 1f);
 
         parent.setSBValue(saturation, brightness);
     }
@@ -84,19 +78,16 @@ class SBSelector extends ConfigChild {
 
                     int argb = Color.HSBtoRGB(hue, saturation, brightness) | (0xff << 24);
 
-                    //so for some reason the default format is supposed to be argb
-                    //however it's all coded to use abgr for some reason so have to
-                    //use this function instead...
-                    image.setColorArgb(i, j, argb);
+                    image.setPixel(i, j, argb);
                 }
             }
 
-            TextureManager textureManager = MinecraftClient.getInstance().getTextureManager();
-            NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> "TODO: change this", image);
+            TextureManager textureManager = Minecraft.getInstance().getTextureManager();
+            DynamicTexture texture = new DynamicTexture(() -> "TODO: change this", image);
 
             texture.upload();
-            textureManager.destroyTexture(sbMask);
-            textureManager.registerTexture(sbMask, texture);
+            textureManager.release(sbMask);
+            textureManager.register(sbMask, texture);
         }
     }
 

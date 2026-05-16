@@ -2,17 +2,17 @@ package config.practical.widgets;
 
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class ConfigString extends TextFieldWidget {
+public class ConfigString extends EditBox {
 
     private static final int HEIGHT = 40;
     private static final int INPUT_PADDING = 2;
@@ -22,13 +22,13 @@ public class ConfigString extends TextFieldWidget {
 
     private int maxLength;
     private int selectionEnd;
-    private Consumer<String> changedListener;
+    private Consumer<String> responderListener;
 
-    public ConfigString(Text message, Supplier<String> supplier, Consumer<String> consumer, boolean formatText) {
-        super(MinecraftClient.getInstance().textRenderer, Constants.WIDGET_WIDTH, HEIGHT, message);
+    public ConfigString(Component message, Supplier<String> supplier, Consumer<String> consumer, boolean formatText) {
+        super(Minecraft.getInstance().font, Constants.WIDGET_WIDTH, HEIGHT, message);
         this.setMaxLength(100);
-        this.setText(supplier.get());
-        this.setChangedListener(string -> {
+        this.setValue(supplier.get());
+        this.setResponder(string -> {
             if (formatText) {
                 consumer.accept(string.replace('&', '§'));
             } else {
@@ -37,25 +37,25 @@ public class ConfigString extends TextFieldWidget {
         });
     }
 
-    public ConfigString(Text message, Supplier<String> supplier, Consumer<String> consumer) {
+    public ConfigString(Component message, Supplier<String> supplier, Consumer<String> consumer) {
         this(message, supplier, consumer, true);
     }
 
     @Override
-    public void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        DrawHelper.drawBackground(context, getX(), super.getY(), width, getMainBackgroundHeight());
-        context.drawText(MinecraftClient.getInstance().textRenderer, getMessage(), getX() + Constants.TEXT_PADDING, super.getY() + (getMainBackgroundHeight() - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
-        DrawHelper.drawBackground(context, getX(), super.getY() + (height - INPUT_HEIGHT), width, INPUT_HEIGHT, INPUT_COLOR);
-        super.renderWidget(context, mouseX, mouseY, deltaTicks);
+    public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        DrawHelper.drawBackground(graphics, getX(), super.getY(), width, getMainBackgroundHeight());
+        graphics.drawString(Minecraft.getInstance().font, getMessage(), getX() + Constants.TEXT_PADDING, super.getY() + (getMainBackgroundHeight() - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, getX(), super.getY() + (height - INPUT_HEIGHT), width, INPUT_HEIGHT, INPUT_COLOR);
+        super.renderWidget(graphics, mouseX, mouseY, deltaTicks);
 
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
+    public boolean charTyped(CharacterEvent event) {
         if (!this.isActive()) {
             return false;
-        } else if (input.isValidChar() || isValid(input)) {
-            this.write(input.asString());
+        } else if (event.isAllowedChatCharacter() || isValid(event)) {
+            this.insertText(event.codepointAsString());
             return true;
         } else {
             return false;
@@ -63,8 +63,8 @@ public class ConfigString extends TextFieldWidget {
     }
 
 
-    private boolean isValid(CharInput input) {
-        return input.asString().contains("§");
+    private boolean isValid(CharacterEvent input) {
+        return input.codepointAsString().contains("§");
     }
 
     /**
@@ -73,10 +73,10 @@ public class ConfigString extends TextFieldWidget {
      * @param text The text to add
      */
     @Override
-    public void write(String text) {
-        int i = Math.min(getCursor(), this.selectionEnd);
-        int j = Math.max(getCursor(), this.selectionEnd);
-        int k = this.maxLength - getText().length() - (i - j);
+    public void insertText(String text) {
+        int i = Math.min(getCursorPosition(), this.selectionEnd);
+        int j = Math.max(getCursorPosition(), this.selectionEnd);
+        int k = this.maxLength - getValue().length() - (i - j);
         if (k > 0) {
             //String string = StringHelper.stripInvalidChars(text);
             String string = text;
@@ -89,18 +89,18 @@ public class ConfigString extends TextFieldWidget {
                 string = string.substring(0, k);
                 l = k;
             }
-            String string2 = new StringBuilder(getText()).replace(i, j, string).toString();
-            setText(string2);
-            this.setSelectionStart(i + l);
-            this.setSelectionEnd(getCursor());
-            changedListener.accept(getText());
+            String string2 = new StringBuilder(getValue()).replace(i, j, string).toString();
+            setValue(string2);
+            this.setCursorPosition(i + l);
+            this.setHighlightPos(getCursorPosition());
+            responderListener.accept(getValue());
         }
     }
 
     @Override
-    public void setSelectionEnd(int index) {
-        this.selectionEnd = MathHelper.clamp(index, 0, getText().length());
-        super.setSelectionEnd(index);
+    public void setHighlightPos(int index) {
+        this.selectionEnd = Mth.clamp(index, 0, getValue().length());
+        super.setHighlightPos(index);
     }
 
     @Override
@@ -110,9 +110,9 @@ public class ConfigString extends TextFieldWidget {
     }
 
     @Override
-    public void setChangedListener(Consumer<String> changedListener) {
-        this.changedListener = changedListener;
-        super.setChangedListener(changedListener);
+    public void setResponder(Consumer<String> responderListener) {
+        this.responderListener = responderListener;
+        super.setResponder(responderListener);
     }
 
     @Override
@@ -130,7 +130,7 @@ public class ConfigString extends TextFieldWidget {
     }
 
     @Override
-    public boolean drawsBackground() {
+    public boolean isBordered() {
         return false;
     }
 }

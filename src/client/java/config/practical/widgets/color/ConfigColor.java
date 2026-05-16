@@ -3,12 +3,12 @@ package config.practical.widgets.color;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigParent;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -47,7 +47,7 @@ public class ConfigColor extends ConfigParent {
      * @param identifier   a string that's unique to link the sb-mask to
      * @param transparency true for transparency, else false
      */
-    public ConfigColor(Text message, Supplier<Integer> supplier, Consumer<Integer> consumer, String identifier, boolean transparency) {
+    public ConfigColor(Component  message, Supplier<Integer> supplier, Consumer<Integer> consumer, String identifier, boolean transparency) {
         super(0, 0, Constants.WIDGET_WIDTH, HEIGHT, message);
         this.supplier = supplier;
         this.consumer = consumer;
@@ -85,20 +85,20 @@ public class ConfigColor extends ConfigParent {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
 
         int x = getX();
         int y = getY();
         int width = getWidth();
         int height = getHeight();
 
-        DrawHelper.drawBackground(context, x, y, width, height);
-        context.drawText(MinecraftClient.getInstance().textRenderer, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, x, y, width, height);
+        graphics.drawString(Minecraft.getInstance().font, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
 
         if (transparency) {
-            DrawHelper.drawBackground(context, x + width - COLOR_SIZE - COLOR_RIGHT_PADDING, y + (height - COLOR_SIZE) / 2, COLOR_SIZE, COLOR_SIZE, supplier.get());
+            DrawHelper.drawBackground(graphics, x + width - COLOR_SIZE - COLOR_RIGHT_PADDING, y + (height - COLOR_SIZE) / 2, COLOR_SIZE, COLOR_SIZE, supplier.get());
         } else {
-            DrawHelper.drawBackground(context, x + width - COLOR_SIZE - COLOR_RIGHT_PADDING, y + (height - COLOR_SIZE) / 2, COLOR_SIZE, COLOR_SIZE, 255 << 24 | supplier.get());
+            DrawHelper.drawBackground(graphics, x + width - COLOR_SIZE - COLOR_RIGHT_PADDING, y + (height - COLOR_SIZE) / 2, COLOR_SIZE, COLOR_SIZE, 255 << 24 | supplier.get());
         }
     }
 
@@ -107,8 +107,8 @@ public class ConfigColor extends ConfigParent {
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
         displayColorSelector = !displayColorSelector;
         update();
     }

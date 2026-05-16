@@ -1,17 +1,17 @@
 package config.practical;
 
 
+import com.mojang.blaze3d.platform.Window;
 import config.practical.category.ConfigCategory;
 import config.practical.category.ConfigCategoryList;
 import config.practical.manager.ConfigManager;
 import config.practical.utilities.Constants;
 import config.practical.widgets.abstracts.ConfigParent;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.util.Window;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2fStack;
 
@@ -44,32 +44,32 @@ public class ConfigurableScreen extends Screen {
      * @param parent A screen that will be the parent of this
      * @param manager The configManager that should save when the screen is closed
      */
-    public ConfigurableScreen(Text title, Screen parent, @NotNull ConfigManager manager) {
+    public ConfigurableScreen(Component title, Screen parent, @NotNull ConfigManager manager) {
         super(title);
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         Window window = client.getWindow();
 
-        scroll = new ConfigScroll(0, LIST_Y_OFFSET, window.getScaledWidth(), window.getScaledHeight() - LIST_Y_OFFSET, Constants.WIDGET_WIDTH + 100);
-        search = new ConfigSearch(client.textRenderer, WIDGET_X_OFFSET, (LIST_Y_OFFSET - ConfigSearch.HEIGHT) / 2, this::updateScroll);
+        scroll = new ConfigScroll(0, LIST_Y_OFFSET, window.getGuiScaledWidth(), window.getGuiScaledHeight() - LIST_Y_OFFSET, Constants.WIDGET_WIDTH + 100);
+        search = new ConfigSearch(client.font, WIDGET_X_OFFSET, (LIST_Y_OFFSET - ConfigSearch.HEIGHT) / 2, this::updateScroll);
         categories = new ConfigCategoryList(this, WIDGET_X_OFFSET, LIST_Y_OFFSET + CATEGORY_Y_OFFSET);
-        hudEdit = new ConfigHudEdit(this, window.getScaledWidth() - ConfigHudEdit.WIDTH - WIDGET_X_OFFSET, (LIST_Y_OFFSET - ConfigHudEdit.HEIGHT) / 2);
+        hudEdit = new ConfigHudEdit(this, window.getGuiScaledWidth() - ConfigHudEdit.WIDTH - WIDGET_X_OFFSET, (LIST_Y_OFFSET - ConfigHudEdit.HEIGHT) / 2);
 
         this.parent = parent;
         this.manager = manager;
     }
 
     @SuppressWarnings("unused")
-    public ConfigurableScreen(Text title, @NotNull ConfigManager manager) {
+    public ConfigurableScreen(Component title, @NotNull ConfigManager manager) {
         this(title, null, manager);
     }
 
     @Override
     protected void init() {
-        addDrawableChild(search);
-        addDrawableChild(categories);
-        addDrawableChild(scroll);
-        addDrawableChild(hudEdit);
+        addRenderableWidget(search);
+        addRenderableWidget(categories);
+        addRenderableWidget(scroll);
+        addRenderableWidget(hudEdit);
         update();
     }
 
@@ -86,7 +86,7 @@ public class ConfigurableScreen extends Screen {
         scroll.setFocused(null);
         scroll.children().clear();
 
-        for (ClickableWidget widget: categories.searchWidgets(searchTerm.toLowerCase())) {
+        for (AbstractWidget widget: categories.searchWidgets(searchTerm.toLowerCase())) {
             if (widget instanceof ConfigParent configParent) {
                 configParent.hideAll();
                 configParent.update();
@@ -94,27 +94,26 @@ public class ConfigurableScreen extends Screen {
             scroll.add(widget);
         }
 
-        scroll.setScrollY(0);
+        scroll.setScrollAmount(0);
         scroll.hideChildComponents(false);
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        super.render(context, mouseX, mouseY, deltaTicks);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        super.render(graphics, mouseX, mouseY, deltaTicks);
 
-        float centerX = (MinecraftClient.getInstance().getWindow().getScaledWidth() - (this.textRenderer.getWidth(this.title) * TITLE_SCALAR)) / 2;
-        Matrix3x2fStack stack = context.getMatrices();
+        float centerX = (Minecraft.getInstance().getWindow().getGuiScaledWidth() - (this.font.width(this.title) * TITLE_SCALAR)) / 2;
+        Matrix3x2fStack stack = graphics.pose();
         stack.pushMatrix();
         stack.translate(centerX, TITLE_Y_OFFSET);
         stack.scale(TITLE_SCALAR, TITLE_SCALAR);
-        context.drawText(this.textRenderer, this.title, 0, 0, TITLE_COLOR, true);
+        graphics.drawString(this.font, this.title, 0, 0, TITLE_COLOR, true);
         stack.popMatrix();
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         manager.save();
-        assert this.client != null;
-        this.client.setScreen(this.parent);
+        this.minecraft.setScreen(this.parent);
     }
 }

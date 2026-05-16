@@ -1,7 +1,7 @@
 package config.practical.data;
 
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 
 public class SoundData {
 
@@ -15,13 +15,13 @@ public class SoundData {
     }
 
     public SoundData(SoundEvent soundEvent, float volume, float pitch) {
-        this(soundEvent.id(), volume, pitch);
+        this(soundEvent.location(), volume, pitch);
     }
 
 
     public void setSound(SoundEvent soundEvent) {
         if (soundEvent == null) return;
-        sound = soundEvent.id().toString();
+        sound = soundEvent.location().toString();
     }
 
     public void setSound(Identifier identifier) {
@@ -46,6 +46,6 @@ public class SoundData {
     }
 
     public Identifier getSound() {
-        return Identifier.of(sound);
+        return Identifier.parse(sound);
     }
 }

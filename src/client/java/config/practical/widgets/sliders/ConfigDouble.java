@@ -1,8 +1,8 @@
 package config.practical.widgets.sliders;
 
 import config.practical.utilities.Constants;
-import net.minecraft.client.input.KeyInput;
-import net.minecraft.text.Text;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -23,7 +23,7 @@ public class ConfigDouble extends Slider {
      * @param max      the max value
      */
     @SuppressWarnings("unused")
-    public ConfigDouble(Text message, Supplier<Double> supplier, Consumer<Double> consumer, double step, double min, double max) {
+    public ConfigDouble(Component message, Supplier<Double> supplier, Consumer<Double> consumer, double step, double min, double max) {
         super(message);
         this.supplier = supplier;
         this.consumer = consumer;
@@ -52,8 +52,8 @@ public class ConfigDouble extends Slider {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        int keyCode = input.key();
+    public boolean keyPressed(KeyEvent event) {
+        int keyCode = event.key();
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
             consumer.accept(Math.max(supplier.get() - step, min));
             updateThumbPosWithDelta((float)((supplier.get() - min) / (max - min)));
@@ -64,7 +64,6 @@ public class ConfigDouble extends Slider {
             return true;
         }
 
-        return super.keyPressed(input);
+        return super.keyPressed(event);
     }
-
 }

@@ -1,21 +1,21 @@
 package config.practical.widgets.sound;
 
 import config.practical.utilities.Constants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
-class SoundWidget extends ClickableWidget {
+class SoundWidget extends AbstractWidget {
 
-    private static final Identifier BUTTON_TEXTURE = Identifier.ofVanilla("widget/button");
-    private static final Identifier MUSIC_NOTE = Identifier.of(Constants.NAMESPACE, "music_note");
-    private static final Identifier CHECKMARK = Identifier.of(Constants.NAMESPACE, "checkmark");
+    private static final Identifier BUTTON_TEXTURE = Identifier.withDefaultNamespace("widget/button");
+    private static final Identifier MUSIC_NOTE = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "music_note");
+    private static final Identifier CHECKMARK = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "checkmark");
     private static final int HEIGHT = 30;
     private static final int BUTTON_SIZE = 20;
     private static final int PADDING = 4;
@@ -24,23 +24,23 @@ class SoundWidget extends ClickableWidget {
     private final SoundScreen screen;
 
     public SoundWidget(Identifier identifier, SoundScreen screen) {
-        super(0, 0, Constants.WIDGET_WIDTH, HEIGHT, Text.literal(identifier.toString()));
+        super(0, 0, Constants.WIDGET_WIDTH, HEIGHT, Component.literal(identifier.toString()));
         this.identifier = identifier;
         this.screen = screen;
 
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        TextRenderer textRenderer = client.textRenderer;
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        Minecraft client = Minecraft.getInstance();
+        Font font = client.font;
         int x = getX();
         int y = getY();
-        context.drawText(textRenderer, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, BUTTON_TEXTURE, buttonX(), buttonY(), BUTTON_SIZE, BUTTON_SIZE);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, CHECKMARK, buttonX(), buttonY(), BUTTON_SIZE, BUTTON_SIZE);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, BUTTON_TEXTURE, soundX(), soundY(), BUTTON_SIZE, BUTTON_SIZE);
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, MUSIC_NOTE, soundX(), soundY(), BUTTON_SIZE, BUTTON_SIZE);
+        graphics.drawString(font, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUTTON_TEXTURE, buttonX(), buttonY(), BUTTON_SIZE, BUTTON_SIZE);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, CHECKMARK, buttonX(), buttonY(), BUTTON_SIZE, BUTTON_SIZE);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUTTON_TEXTURE, soundX(), soundY(), BUTTON_SIZE, BUTTON_SIZE);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, MUSIC_NOTE, soundX(), soundY(), BUTTON_SIZE, BUTTON_SIZE);
     }
 
     public boolean contains(String searchTerm) {
@@ -48,14 +48,14 @@ class SoundWidget extends ClickableWidget {
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        soundClick(click.x(), click.y());
-        buttonClick(click.x(), click.y());
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        soundClick(event.x(), event.y());
+        buttonClick(event.x(), event.y());
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 

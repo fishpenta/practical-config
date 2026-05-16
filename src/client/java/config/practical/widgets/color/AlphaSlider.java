@@ -3,15 +3,15 @@ package config.practical.widgets.color;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigChild;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 class AlphaSlider extends ConfigChild {
 
-    private static final Identifier ALPHA_SLIDER = Identifier.of(Constants.NAMESPACE, "alpha-sprite");
+    private static final Identifier ALPHA_SLIDER = Identifier.fromNamespaceAndPath(Constants.NAMESPACE, "alpha-sprite");
     private static final int THUMB_DIAMETER = Constants.CORNER_RADIUS * 2;
 
     private final ConfigColor parent;
@@ -25,7 +25,7 @@ class AlphaSlider extends ConfigChild {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         if (!parent.displayColorSelector()) return;
 
         int x = getX();
@@ -33,26 +33,26 @@ class AlphaSlider extends ConfigChild {
         int width = getWidth();
         int height = getHeight();
 
-        context.drawGuiTexture(RenderPipelines.GUI_TEXTURED, ALPHA_SLIDER, x, y, width, height);
-        DrawHelper.drawBackground(context, x + thumbPosition, y, THUMB_DIAMETER, THUMB_DIAMETER);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, ALPHA_SLIDER, x, y, width, height);
+        DrawHelper.drawBackground(graphics, x + thumbPosition, y, THUMB_DIAMETER, THUMB_DIAMETER);
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
-
-    }
-
-    @Override
-    protected void onDrag(Click click, double offsetX, double offsetY) {
-        super.onDrag(click, offsetX, offsetY);
-        setThumbPosition(click.x());
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        setThumbPosition(click.x());
+    protected void onDrag(MouseButtonEvent event, double offsetX, double offsetY) {
+        super.onDrag(event, offsetX, offsetY);
+        setThumbPosition(event.x());
+
+    }
+
+    @Override
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        setThumbPosition(event.x());
     }
 
     public void setAlphaValue(int alphaValue) {

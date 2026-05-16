@@ -1,15 +1,16 @@
 package config.practical.widgets.abstracts;
 
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.Component;
 
-public abstract class ConfigChild extends ClickableWidget {
+public abstract class ConfigChild extends AbstractWidget {
 
     private final int normalWidth;
     private final ConfigParent parent;
 
     public ConfigChild(ConfigParent parent, int width, int height) {
-        super(0, 0, 0, height, Text.empty());
+        super(0, 0, 0, height, Component.empty());
         this.normalWidth = width;
         this.parent = parent;
     }
@@ -25,8 +26,8 @@ public abstract class ConfigChild extends ClickableWidget {
     }
 
     @Override
-    public boolean isSelected() {
-        return super.isSelected();
+    public boolean isHoveredOrFocused() {
+        return super.isHoveredOrFocused();
     }
 
     public int getNormalWidth() {return normalWidth;}
@@ -34,4 +35,9 @@ public abstract class ConfigChild extends ClickableWidget {
     protected abstract boolean showWidget();
 
     protected abstract void updatePosition(int x, int y);
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+
+    }
 }

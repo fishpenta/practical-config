@@ -3,29 +3,29 @@ package config.practical;
 import config.practical.widgets.ConfigSection;
 import config.practical.widgets.abstracts.ConfigChild;
 import config.practical.widgets.abstracts.ConfigParent;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.ContainerWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractContainerWidget;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConfigScroll extends ContainerWidget {
+public class ConfigScroll extends AbstractContainerWidget {
 
     private static final int ITEM_MARGIN = 4;
     private static final int SLIDER_X_OFFSET = 24;
 
-    private final ArrayList<ClickableWidget> children;
-    private final ArrayList<ClickableWidget> childWidgets;
+    private final ArrayList<AbstractWidget> children;
+    private final ArrayList<AbstractWidget> childWidgets;
     private int contentHeight;
     private final int maxItemWidth;
 
     public ConfigScroll(int x, int y, int width, int height, int maxItemWidth) {
-        super(x, y, width, height, Text.empty());
+        super(x, y, width, height, Component.empty());
         this.children = new ArrayList<>();
         this.childWidgets = new ArrayList<>();
         this.contentHeight = 0;
@@ -34,11 +34,11 @@ public class ConfigScroll extends ContainerWidget {
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return children;
     }
 
-    public void add(ClickableWidget widget) {
+    public void add(AbstractWidget widget) {
         if (widget == null) return;
         children.add(widget);
 
@@ -48,30 +48,30 @@ public class ConfigScroll extends ContainerWidget {
     }
 
     @Override
-    public void setFocused(@Nullable Element focused) {
+    public void setFocused(@Nullable GuiEventListener focused) {
         super.setFocused(focused);
         hideChildComponents(true);
 
     }
 
     @Override
-    protected int getContentsHeightWithPadding() {
+    protected int contentHeight() {
         return contentHeight;
     }
 
     @Override
-    protected double getDeltaYPerScroll() {
+    protected double scrollRate() {
         return 10;
     }
 
     @Override
-    protected int getScrollbarX() {
+    protected int scrollBarX() {
         return (width + maxItemWidth) / 2 + SLIDER_X_OFFSET;
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        this.drawScrollbar(context, mouseX, mouseY);
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        this.renderScrollbar(graphics, mouseX, mouseY);
 
         int x = getX();
         int y = getY();
@@ -79,20 +79,20 @@ public class ConfigScroll extends ContainerWidget {
         int height = getHeight();
 
 
-        context.enableScissor(x, y, x + width, y + height);
-        for (ClickableWidget widget : children) {
+        graphics.enableScissor(x, y, x + width, y + height);
+        for (AbstractWidget widget : children) {
             if (widget instanceof ConfigChild) continue;
-            widget.render(context, mouseX, mouseY, deltaTicks);
+            widget.render(graphics, mouseX, mouseY, deltaTicks);
         }
-        for (ClickableWidget widget : childWidgets) {
-            widget.render(context, mouseX, mouseY, deltaTicks);
+        for (AbstractWidget widget : childWidgets) {
+            widget.render(graphics, mouseX, mouseY, deltaTicks);
         }
-        context.disableScissor();
+        graphics.disableScissor();
     }
 
     @Override
-    public void setScrollY(double scrollY) {
-        super.setScrollY(scrollY);
+    public void setScrollAmount(double scrollY) {
+        super.setScrollAmount(scrollY);
         update();
     }
 
@@ -100,11 +100,11 @@ public class ConfigScroll extends ContainerWidget {
         int x = getX();
         int y = getY();
 
-        int currY = y - (int) getScrollY();
+        int currY = y - (int) scrollAmount();
 
         int halfWidth = width / 2;
 
-        for (ClickableWidget widget : children) {
+        for (AbstractWidget widget : children) {
 
             if (widget instanceof ConfigChild) continue;
 
@@ -123,16 +123,16 @@ public class ConfigScroll extends ContainerWidget {
         //contentHeight = currY - y + (int) getScrollY();
 
         int highestY = 0;
-        for (ClickableWidget widget : children) {
+        for (AbstractWidget widget : children) {
             highestY = Math.max(highestY, (widget.getY() + widget.getHeight()));
         }
 
         //to fix ConfigChild components being out of bounds
-        contentHeight = highestY + (int) getScrollY();
+        contentHeight = highestY + (int) scrollAmount();
     }
 
     public void hideChildComponents(boolean keepFocused) {
-        for (ClickableWidget widget : children) {
+        for (AbstractWidget widget : children) {
             if (widget.isFocused() && !(widget instanceof ConfigSection) && keepFocused) {
                 continue;
             }
@@ -150,7 +150,7 @@ public class ConfigScroll extends ContainerWidget {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 }

@@ -2,13 +2,13 @@ package config.practical.category;
 
 import config.practical.widgets.ConfigSection;
 import config.practical.widgets.abstracts.ConfigParent;
-import net.minecraft.client.gui.widget.ClickableWidget;
+import net.minecraft.client.gui.components.AbstractWidget;
 
 import java.util.ArrayList;
 
 public class ConfigCategory {
     public final String name;
-    public final ArrayList<ClickableWidget> widgets;
+    public final ArrayList<AbstractWidget> widgets;
 
     /**
      * @param name The name of the category
@@ -19,16 +19,16 @@ public class ConfigCategory {
     }
 
     @SuppressWarnings("unused")
-    public void add(ClickableWidget widget) {
+    public void add(AbstractWidget widget) {
         if (widget == null) return;
         widgets.add(widget);
     }
 
-    public ArrayList<ClickableWidget> searchWidgets(String term) {
+    public ArrayList<AbstractWidget> searchWidgets(String term) {
 
-        ArrayList<ClickableWidget> temp = new ArrayList<>();
+        ArrayList<AbstractWidget> temp = new ArrayList<>();
 
-        for (ClickableWidget widget : widgets) {
+        for (AbstractWidget widget : widgets) {
             if (widget instanceof ConfigSection section) {
                 if (section.contains(term)) {
                     temp.addAll(section.getAllWidgets());

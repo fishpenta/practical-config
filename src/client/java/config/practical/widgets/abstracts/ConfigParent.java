@@ -1,26 +1,26 @@
 package config.practical.widgets.abstracts;
 
 import config.practical.widgets.ConfigSection;
-import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.ParentElement;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ConfigParent extends ClickableWidget implements ParentElement {
+public abstract class ConfigParent extends AbstractWidget implements ContainerEventHandler {
 
     private final ArrayList<ConfigChild> widgets = new ArrayList<>();
 
-    public ConfigParent(int x, int y, int width, int height, Text message) {
+    public ConfigParent(int x, int y, int width, int height, Component message) {
         super(x, y, width, height, message);
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 
@@ -35,25 +35,25 @@ public abstract class ConfigParent extends ClickableWidget implements ParentElem
     }
 
     @Override
-    public @Nullable Element getFocused() {
+    public @Nullable GuiEventListener getFocused() {
         return null;
     }
 
     @Override
-    public List<? extends Element> children() {
+    public List<? extends GuiEventListener> children() {
         return widgets;
     }
 
     @Override
-    public void setFocused(@Nullable Element focused) {
+    public void setFocused(@Nullable GuiEventListener focused) {
 
     }
 
-    public ArrayList<ClickableWidget> getAllWidgets() {
+    public ArrayList<AbstractWidget> getAllWidgets() {
 
-        ArrayList<ClickableWidget> temp = new ArrayList<>();
+        ArrayList<AbstractWidget> temp = new ArrayList<>();
 
-        for (ClickableWidget widget: widgets) {
+        for (AbstractWidget widget: widgets) {
 
             if (widget instanceof ConfigParent parent) {
                 temp.addAll(parent.getAllWidgets());
@@ -85,10 +85,10 @@ public abstract class ConfigParent extends ClickableWidget implements ParentElem
     public abstract void hideAll();
 
     public boolean hasSelectedComponent() {
-        if (this.isSelected()) return true;
+        if (this.isHoveredOrFocused()) return true;
 
         for (ConfigChild widget: widgets) {
-            if (widget.isSelected()) return true;
+            if (widget.isHoveredOrFocused()) return true;
         }
 
         return false;

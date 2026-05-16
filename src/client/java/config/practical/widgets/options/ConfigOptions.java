@@ -3,10 +3,10 @@ package config.practical.widgets.options;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigParent;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -28,7 +28,7 @@ public class ConfigOptions<T> extends ConfigParent {
      * @param supplier a supplier to the current option
      * @param consumer a consumer to set the current option
      */
-    public ConfigOptions(Text message, T[] options, Supplier<T> supplier, Consumer<T> consumer) {
+    public ConfigOptions(Component message, T[] options, Supplier<T> supplier, Consumer<T> consumer) {
         super(0, 0, WIDTH, HEIGHT, message);
         list = new OptionsList<>(this, options, consumer);
         addChild(list);
@@ -36,24 +36,24 @@ public class ConfigOptions<T> extends ConfigParent {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         int x = getX();
         int y = getY();
         int width = getWidth();
         int height = getHeight();
 
         //background and message
-        DrawHelper.drawBackground(context, x, y, width, height);
-        context.drawText(MinecraftClient.getInstance().textRenderer, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, x, y, width, height);
+        graphics.drawString(Minecraft.getInstance().font, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
 
         //selected item
-        DrawHelper.drawBackground(context, x + WIDTH - OptionsList.WIDTH - MARGIN, y + MARGIN, OptionsList.WIDTH, OptionsList.ELEMENT_HEIGHT);
-        context.drawText(MinecraftClient.getInstance().textRenderer, supplier.get().toString(), x + WIDTH - OptionsList.WIDTH - MARGIN + Constants.TEXT_PADDING, y + MARGIN + (OptionsList.ELEMENT_HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, x + WIDTH - OptionsList.WIDTH - MARGIN, y + MARGIN, OptionsList.WIDTH, OptionsList.ELEMENT_HEIGHT);
+        graphics.drawString(Minecraft.getInstance().font, supplier.get().toString(), x + WIDTH - OptionsList.WIDTH - MARGIN + Constants.TEXT_PADDING, y + MARGIN + (OptionsList.ELEMENT_HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
         displayList = !displayList;
         update();
     }

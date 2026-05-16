@@ -3,11 +3,11 @@ package config.practical.widgets.color;
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
 import config.practical.widgets.abstracts.ConfigChild;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Set;
@@ -27,17 +27,17 @@ class HexInput extends ConfigChild {
     }
 
     @Override
-    public boolean keyPressed(KeyInput input) {
-        if (input.key() == GLFW.GLFW_KEY_BACKSPACE && !text.isEmpty()) {
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_BACKSPACE && !text.isEmpty()) {
             text = text.substring(0, text.length() - 1);
         }
 
-        return super.keyPressed(input);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean charTyped(CharInput input) {
-        char chr = input.asString().charAt(0);
+    public boolean charTyped(CharacterEvent event) {
+        char chr = event.codepointAsString().charAt(0);
         if (ALLOWED_CHARS.contains(chr) && text.length() < 6) {
             text += (chr + "").toUpperCase();
         }
@@ -50,7 +50,7 @@ class HexInput extends ConfigChild {
             }
         }
 
-        return super.charTyped(input);
+        return super.charTyped(event);
     }
 
     public void updateText(int color) {
@@ -76,7 +76,7 @@ class HexInput extends ConfigChild {
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         if (!parent.displayColorSelector()) return;
 
         int x = getX();
@@ -84,12 +84,13 @@ class HexInput extends ConfigChild {
         int width = getWidth();
         int height = getHeight();
 
-        DrawHelper.drawBackground(context, x, y, width, height, TEXT_BACKGROUND_COLOR);
-        context.drawText(MinecraftClient.getInstance().textRenderer, "#" + text, x + Constants.TEXT_PADDING, y + (height - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, x, y, width, height, TEXT_BACKGROUND_COLOR);
+        graphics.drawString(Minecraft.getInstance().font, "#" + text, x + Constants.TEXT_PADDING, y + (height - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
+
 }

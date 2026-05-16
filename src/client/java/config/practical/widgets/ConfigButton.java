@@ -2,59 +2,59 @@ package config.practical.widgets;
 
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
 
 @SuppressWarnings("unused")
-public class ConfigButton extends ClickableWidget {
+public class ConfigButton extends AbstractWidget {
     public static final int HEIGHT = 25;
 
     private final Runnable runnable;
     private long clickedTime = 0;
     private final long delay;
 
-    public ConfigButton(Text message, Runnable runnable, long delay) {
+    public ConfigButton(Component message, Runnable runnable, long delay) {
         super(0, 0, Constants.WIDGET_WIDTH, HEIGHT, message);
         this.delay = delay;
         this.runnable = runnable;
     }
 
     @SuppressWarnings("unused")
-    public ConfigButton(Text message, Runnable runnable) {
+    public ConfigButton(Component message, Runnable runnable) {
         this(message, runnable, 200);
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         int x = getX();
         int y = getY();
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
 
-        int centered = (width - textRenderer.getWidth(getMessage())) / 2;
+        int centered = (width - font.width(getMessage())) / 2;
 
         long diff = System.currentTimeMillis() - clickedTime;
 
         if (diff > delay) {
-            DrawHelper.drawBackground(context, x, y, width, height, 0xff666666);
+            DrawHelper.drawBackground(graphics, x, y, width, height, 0xff666666);
         } else {
-            DrawHelper.drawBackground(context, x, y, width, height, 0xff333333);
+            DrawHelper.drawBackground(graphics, x, y, width, height, 0xff333333);
 
         }
 
-        context.drawText(textRenderer, getMessage(), x + centered, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        graphics.drawString(font, getMessage(), x + centered, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
 
 
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
         long diff = System.currentTimeMillis() - clickedTime;
 
         if (diff > delay) {
@@ -64,7 +64,9 @@ public class ConfigButton extends ClickableWidget {
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
+
+
 }

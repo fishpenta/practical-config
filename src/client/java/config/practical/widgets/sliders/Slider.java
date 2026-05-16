@@ -2,16 +2,16 @@ package config.practical.widgets.sliders;
 
 import config.practical.utilities.Constants;
 import config.practical.utilities.DrawHelper;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Click;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
-import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 
-public abstract class Slider extends ClickableWidget {
+public abstract class Slider extends AbstractWidget {
 
     private static final int HEIGHT = 30;
 
@@ -26,12 +26,12 @@ public abstract class Slider extends ClickableWidget {
     private int thumbPos;
     private boolean isDragging = false;
 
-    public Slider(Text message) {
+    public Slider(Component message) {
         super(0, 0, Constants.WIDGET_WIDTH, HEIGHT, message);
     }
 
     @Override
-    protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+    protected void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
         int x = getX();
         int y = getY();
         int width = getWidth();
@@ -42,19 +42,19 @@ public abstract class Slider extends ClickableWidget {
 
         String currStr = getCurrValue();
 
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        Font font = Minecraft.getInstance().font;
 
         //background
-        DrawHelper.drawBackground(context, x, y, width, height);
-        context.drawText(textRenderer, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        DrawHelper.drawBackground(graphics, x, y, width, height);
+        graphics.drawString(font, getMessage(), x + Constants.TEXT_PADDING, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
 
         //slider
-        DrawHelper.drawBackground(context, sliderX, sliderY, SLIDER_WIDTH, SLIDER_HEIGHT, SLIDER_BACKGROUND_COLOR);
+        DrawHelper.drawBackground(graphics, sliderX, sliderY, SLIDER_WIDTH, SLIDER_HEIGHT, SLIDER_BACKGROUND_COLOR);
 
         //thumb
-        DrawHelper.drawBackground(context, sliderX + thumbPos, sliderY, THUMB_RADIUS * 2, THUMB_RADIUS * 2);
+        DrawHelper.drawBackground(graphics, sliderX + thumbPos, sliderY, THUMB_RADIUS * 2, THUMB_RADIUS * 2);
 
-        context.drawText(textRenderer, currStr, sliderX - textRenderer.getWidth(currStr) - 2, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
+        graphics.drawString(font, currStr, sliderX - font.width(currStr) - 2, y + (HEIGHT - Constants.TEXT_HEIGHT) / 2, Constants.WHITE_COLOR, true);
     }
 
     abstract String getCurrValue();
@@ -77,41 +77,41 @@ public abstract class Slider extends ClickableWidget {
     }
 
     protected void updateThumbPosWithDelta(float delta) {
-        float clampedDelta = MathHelper.clamp(delta, 0, 1);
+        float clampedDelta = Mth.clamp(delta, 0, 1);
         thumbPos = (int)(clampedDelta * (SLIDER_WIDTH - THUMB_RADIUS * 2));
     }
 
     public void updateThumbPos(double mouseX) {
-        thumbPos = MathHelper.clamp((int) mouseX - getSliderX() - THUMB_RADIUS, 0, (SLIDER_WIDTH - THUMB_RADIUS * 2));
+        thumbPos = Mth.clamp((int) mouseX - getSliderX() - THUMB_RADIUS, 0, (SLIDER_WIDTH - THUMB_RADIUS * 2));
         float delta = (float) thumbPos / (SLIDER_WIDTH - THUMB_RADIUS * 2);
         updateValue(delta);
     }
 
     @Override
-    public void onRelease(Click click) {
-        super.onRelease(click);
+    public void onRelease(MouseButtonEvent event) {
+        super.onRelease(event);
         isDragging = false;
     }
 
     @Override
-    public void onClick(Click click, boolean doubled) {
-        super.onClick(click, doubled);
-        if (insideSlider((int) click.x(), (int) click.y())) {
+    public void onClick(MouseButtonEvent event, boolean doubled) {
+        super.onClick(event, doubled);
+        if (insideSlider((int) event.x(), (int) event.y())) {
             isDragging = true;
-            updateThumbPos(click.x());
+            updateThumbPos(event.x());
         }
     }
 
     @Override
-    protected void onDrag(Click click, double offsetX, double offsetY) {
-        super.onDrag(click, offsetX, offsetY);
+    protected void onDrag(MouseButtonEvent event, double offsetX, double offsetY) {
+        super.onDrag(event, offsetX, offsetY);
         if (isDragging) {
-            updateThumbPos(click.x());
+            updateThumbPos(event.x());
         }
     }
 
     @Override
-    protected void appendClickableNarrations(NarrationMessageBuilder builder) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
 
     }
 }

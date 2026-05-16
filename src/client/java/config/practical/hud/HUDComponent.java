@@ -1,16 +1,16 @@
 package config.practical.hud;
 
+import com.mojang.blaze3d.platform.Window;
 import config.practical.Practicalconfig;
 import config.practical.utilities.Constants;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.Window;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2fStack;
 
@@ -24,9 +24,9 @@ public class HUDComponent implements HudElement {
     private static final int HIGHLIGHT_COLOR = 0x99ffffff;
     private static final int HIGHLIGHT_MARGIN = 2;
 
-    private static final Identifier AFTER_IDENTIFIER = Identifier.of("boss_bar");
+    private static final Identifier AFTER_IDENTIFIER = Identifier.parse("boss_bar");
 
-    private static final MinecraftClient client = MinecraftClient.getInstance();
+    private static final Minecraft client = Minecraft.getInstance();
 
     private transient final double defaultX, defaultY;
     private transient final float defaultScale;
@@ -59,19 +59,19 @@ public class HUDComponent implements HudElement {
         this.y = y;
         this.width = width;
         this.height = height;
-        this.scale = MathHelper.clamp(scale, MIN_SCALE, MAX_SCALE);
+        this.scale = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
         this.info = info;
 
         defaultX = x;
         defaultY = y;
-        defaultScale = MathHelper.clamp(scale, MIN_SCALE, MAX_SCALE);
+        defaultScale = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
 
         this.conditionSupplier = conditionSupplier;
         this.renderSupplier = renderSupplier;
         this.editSupplier = editSupplier;
 
         //HudElementRegistry.addLast(Identifier.of(Practicalconfig.MOD_ID, "component-" + componentCount), this);
-        HudElementRegistry.attachElementAfter(AFTER_IDENTIFIER, Identifier.of(Practicalconfig.MOD_ID, "component-" + componentCount), this);
+        HudElementRegistry.attachElementAfter(AFTER_IDENTIFIER, Identifier.fromNamespaceAndPath(Practicalconfig.MOD_ID, "component-" + componentCount), this);
         componentCount++;
         ComponentEditScreen.addComponent(this);
     }
@@ -100,7 +100,7 @@ public class HUDComponent implements HudElement {
     }
 
     public void setScale(float scale) {
-        this.scale = MathHelper.clamp(scale, MIN_SCALE, MAX_SCALE);
+        this.scale = Mth.clamp(scale, MIN_SCALE, MAX_SCALE);
     }
 
     public void copyAttributes(HUDComponent component) {
@@ -114,12 +114,12 @@ public class HUDComponent implements HudElement {
     }
 
     public int getScaledX() {
-        int screenWidth = client.getWindow().getScaledWidth();
+        int screenWidth = client.getWindow().getGuiScaledWidth();
         return (int) (x * screenWidth / scale);
     }
 
     public int getScaledY() {
-        int screenHeight = client.getWindow().getScaledHeight();
+        int screenHeight = client.getWindow().getGuiScaledHeight();
         return (int) (y * screenHeight / scale);
     }
 
@@ -150,17 +150,17 @@ public class HUDComponent implements HudElement {
     }
 
     public void centerHorizontally(Window window) {
-        int windowWidth = window.getScaledWidth();
+        int windowWidth = window.getGuiScaledWidth();
         x = (windowWidth - width * scale) / (windowWidth * 2.0);
     }
 
     public void centerVertically(Window window) {
-        int windowHeight = window.getScaledHeight();
+        int windowHeight = window.getGuiScaledHeight();
         y = (windowHeight - height * scale) / (windowHeight * 2.0);
     }
 
     public double calcXSnap(double scaledX, Window window) {
-        int windowWidth = window.getScaledWidth();
+        int windowWidth = window.getGuiScaledWidth();
 
         double diff = scaledX - (windowWidth / 2.0);
 
@@ -177,7 +177,7 @@ public class HUDComponent implements HudElement {
     }
 
     public double calcYSnap(double scaledY, Window window) {
-        int windowHeight = window.getScaledHeight();
+        int windowHeight = window.getGuiScaledHeight();
 
         double diff = scaledY - (windowHeight / 2.0);
 
@@ -194,8 +194,8 @@ public class HUDComponent implements HudElement {
     }
 
     public void snapToGrid(Window window) {
-        int windowWidth = window.getScaledWidth();
-        int windowHeight = window.getScaledHeight();
+        int windowWidth = window.getGuiScaledWidth();
+        int windowHeight = window.getGuiScaledHeight();
         double scaledX = x * windowWidth;
         double scaledY = y * windowHeight;
 
@@ -209,40 +209,40 @@ public class HUDComponent implements HudElement {
     }
 
     public boolean inBounds(int mouseX, int mouseY) {
-        double screenX = x * client.getWindow().getScaledWidth();
-        double screenY = y * client.getWindow().getScaledHeight();
+        double screenX = x * client.getWindow().getGuiScaledWidth();
+        double screenY = y * client.getWindow().getGuiScaledHeight();
 
         return screenX <= mouseX && mouseX <= screenX + (width * scale)
                 && screenY <= mouseY && mouseY <= screenY + (height * scale);
     }
 
-    public void renderIgnoreConditions(DrawContext context) {
-        Matrix3x2fStack stack = context.getMatrices();
+    public void renderIgnoreConditions(GuiGraphics graphics) {
+        Matrix3x2fStack stack = graphics.pose();
         stack.pushMatrix();
         stack.scale(scale, scale);
-        renderSupplier.render(this, context);
+        renderSupplier.render(this, graphics);
         stack.popMatrix();
     }
 
-    public void renderHighlight(DrawContext context) {
-        Matrix3x2fStack stack = context.getMatrices();
+    public void renderHighlight(GuiGraphics graphics) {
+        Matrix3x2fStack stack = graphics.pose();
         stack.pushMatrix();
         stack.scale(scale, scale);
         int x = getScaledX();
         int y = getScaledY();
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-        context.fill(x - HIGHLIGHT_MARGIN, y - HIGHLIGHT_MARGIN, x + width + HIGHLIGHT_MARGIN, y + height + HIGHLIGHT_MARGIN, HIGHLIGHT_COLOR);
-        context.drawText(textRenderer, info, x + (width - textRenderer.getWidth(info)) / 2, y - textRenderer.fontHeight - 2, 0xffffffff, true);
+        Font textRenderer = Minecraft.getInstance().font;
+        graphics.fill(x - HIGHLIGHT_MARGIN, y - HIGHLIGHT_MARGIN, x + width + HIGHLIGHT_MARGIN, y + height + HIGHLIGHT_MARGIN, HIGHLIGHT_COLOR);
+        graphics.drawString(textRenderer, info, x + (width - textRenderer.width(info)) / 2, y - textRenderer.lineHeight - 2, 0xffffffff, true);
         stack.popMatrix();
     }
 
     @Override
-    public void render(DrawContext context, RenderTickCounter tickCounter) {
+    public void render(GuiGraphics graphics, DeltaTracker tickCounter) {
         if (!editSupplier.shouldBeEditable() || !conditionSupplier.shouldRender()) return;
-        Matrix3x2fStack stack = context.getMatrices();
+        Matrix3x2fStack stack = graphics.pose();
         stack.pushMatrix();
         stack.scale(scale, scale);
-        renderSupplier.render(this, context);
+        renderSupplier.render(this, graphics);
         stack.popMatrix();
     }
 
@@ -266,9 +266,9 @@ public class HUDComponent implements HudElement {
          * for the x and y position
          *
          * @param component the component itself
-         * @param context   DrawContext
+         * @param graphics   GuiGraphics
          */
-        void render(HUDComponent component, DrawContext context);
+        void render(HUDComponent component, GuiGraphics graphics);
     }
 
     public interface EditSupplier {

@@ -1,24 +1,24 @@
 package config.practical.widgets.sound;
 
+import com.mojang.blaze3d.platform.Window;
 import config.practical.ConfigScroll;
 import config.practical.ConfigSearch;
 import config.practical.data.SoundData;
 import config.practical.utilities.Constants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.SoundManager;
-import net.minecraft.client.util.Window;
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
 
 import java.util.ArrayList;
 
@@ -27,10 +27,10 @@ class SoundScreen extends Screen {
 
     private static final int BUTTON_HEIGHT = 20;
 
-    private final ButtonWidget confirm;
+    private final Button confirm;
     private final ConfigScroll scroll;
     private final ConfigSearch search;
-    private final TextWidget text;
+    private final StringWidget text;
     private final ArrayList<SoundWidget> soundWidgets = new ArrayList<>();
 
     private final SoundData soundData;
@@ -40,10 +40,10 @@ class SoundScreen extends Screen {
     private SoundInstance prevSound;
 
     public SoundScreen(SoundData soundData, ConfigSound.SoundSelector soundSelector) {
-        super(Text.empty());
+        super(Component.empty());
         loadWidgets();
-        MinecraftClient client = MinecraftClient.getInstance();
-        parent = client.currentScreen;
+        Minecraft client = Minecraft.getInstance();
+        parent = client.screen;
         Window window = client.getWindow();
 
         this.soundData = soundData;
@@ -51,27 +51,27 @@ class SoundScreen extends Screen {
 
         this.identifier = soundData.getSound();
 
-        int textX = (window.getScaledWidth() - Constants.WIDGET_WIDTH) / 2;
+        int textX = (window.getGuiScaledWidth() - Constants.WIDGET_WIDTH) / 2;
 
-        int scrollHeight = window.getScaledHeight() - ConfigSearch.HEIGHT - BUTTON_HEIGHT - 20;
+        int scrollHeight = window.getGuiScaledHeight() - ConfigSearch.HEIGHT - BUTTON_HEIGHT - 20;
 
-        Text btnText = Text.literal("Select");
-        TextRenderer textRenderer = client.textRenderer;
-        int btnWidth = textRenderer.getWidth(btnText) * 2;
+        Component btnText = Component.literal("Select");
+        Font font = client.font;
+        int btnWidth = font.width(btnText) * 2;
 
-        text = new TextWidget(textX, 0, Constants.WIDGET_WIDTH, BUTTON_HEIGHT, Text.literal("Sound: " + soundData.getSound().toString()), textRenderer);
-        confirm = ButtonWidget.builder(btnText, this::confirmSound).position(textX + Constants.WIDGET_WIDTH, 0).width(btnWidth).build();
-        scroll = new ConfigScroll(0, BUTTON_HEIGHT + 10, window.getScaledWidth(), scrollHeight, Constants.WIDGET_WIDTH);
-        search = new ConfigSearch(client.textRenderer, (window.getScaledWidth() - ConfigSearch.WIDTH) / 2, scrollHeight + scroll.getY() + 5, this::updateScroll);
+        text = new StringWidget(textX, 0, Constants.WIDGET_WIDTH, BUTTON_HEIGHT, Component.literal("Sound: " + soundData.getSound().toString()), font);
+        confirm = Button.builder(btnText, this::confirmSound).pos(textX + Constants.WIDGET_WIDTH, 0).width(btnWidth).build();
+        scroll = new ConfigScroll(0, BUTTON_HEIGHT + 10, window.getGuiScaledWidth(), scrollHeight, Constants.WIDGET_WIDTH);
+        search = new ConfigSearch(client.font, (window.getGuiScaledWidth() - ConfigSearch.WIDTH) / 2, scrollHeight + scroll.getY() + 5, this::updateScroll);
         updateScroll("");
     }
 
     @Override
     protected void init() {
-        this.addDrawableChild(text);
-        this.addDrawableChild(confirm);
-        this.addDrawableChild(search);
-        this.addDrawableChild(scroll);
+        this.addRenderableWidget(text);
+        this.addRenderableWidget(confirm);
+        this.addRenderableWidget(search);
+        this.addRenderableWidget(scroll);
     }
 
     private void updateScroll(String searchTerm) {
@@ -85,48 +85,47 @@ class SoundScreen extends Screen {
         }
 
         scroll.update();
-        scroll.setScrollY(0);
+        scroll.setScrollAmount(0);
     }
 
     public void setIdentifier(Identifier identifier) {
         if (identifier == null) return;
         this.identifier = identifier;
-        text.setMessage(Text.literal("Sound: " + identifier));
+        text.setMessage(Component.literal("Sound: " + identifier));
     }
 
     public void playSound(Identifier identifier) {
-        SoundManager soundManager = MinecraftClient.getInstance().getSoundManager();
+        SoundManager soundManager = Minecraft.getInstance().getSoundManager();
         stopSound();
 
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
-        prevSound = new PositionedSoundInstance(SoundEvent.of(identifier), SoundCategory.MASTER, 1, 1, SoundInstance.createRandom(), player.getBlockPos());
+        prevSound = new SimpleSoundInstance(SoundEvent.createVariableRangeEvent(identifier), SoundSource.MASTER, 1, 1, SoundInstance.createUnseededRandom(), player.blockPosition());
         soundManager.play(prevSound);
     }
 
     private void stopSound() {
-        SoundManager soundManager = MinecraftClient.getInstance().getSoundManager();
+        SoundManager soundManager = Minecraft.getInstance().getSoundManager();
         if (prevSound != null) {
             soundManager.stop(prevSound);
         }
     }
 
     private void loadWidgets() {
-        for (Identifier id : Registries.SOUND_EVENT.getIds()) {
+        for (Identifier id : BuiltInRegistries.SOUND_EVENT.keySet()) {
             soundWidgets.add(new SoundWidget(id, this));
         }
     }
 
-    private void confirmSound(ButtonWidget buttonWidget) {
+    private void confirmSound(Button button) {
         soundData.setSound(identifier);
         soundSelector.updateMessage();
-        close();
+        onClose();
     }
 
     @Override
-    public void close() {
-        assert this.client != null;
-        this.client.setScreen(this.parent);
+    public void onClose() {
+        this.minecraft.setScreen(this.parent);
         stopSound();
 
     }
