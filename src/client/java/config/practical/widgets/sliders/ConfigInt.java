@@ -1,7 +1,9 @@
 package config.practical.widgets.sliders;
 
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -64,5 +66,10 @@ public class ConfigInt extends Slider {
         }
 
         return super.keyPressed(input);
+    }
+
+    @Override
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narration) {
+        this.defaultButtonNarrationText(narration);
     }
 }
